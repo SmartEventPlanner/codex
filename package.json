@@ -1,0 +1,13 @@
+{
+  "name": "codex",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "GitHub Actions",
+  "scripts": {
+    "prepare": "echo \"ok\""
+  },
+  "devDependencies": {
+    "@google/genai": "^0.9.0"
+  }
+}
