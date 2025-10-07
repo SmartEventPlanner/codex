@@ -13,7 +13,7 @@ if (!API_KEY) {
 
 const raw = fs.readFileSync(file, "utf8");
 
-// 大きい差分に備えてチャンク → 要約 → 統合
+// 大きい差分は分割 → 要約 → 統合
 const MAX_CHARS = 100_000;
 const chunks = [];
 for (let i = 0; i < raw.length; i += MAX_CHARS) chunks.push(raw.slice(i, i + MAX_CHARS));
@@ -53,7 +53,7 @@ const perChunkInstruction = `
 
 const partials = [];
 for (const c of chunks) {
-  partials.push(await summarize("gemini-2.5-flash", c, perChunkInstruction)); // 速いモデルで分割要約
+  partials.push(await summarize("gemini-2.5-flash", c, perChunkInstruction)); // 速いモデル
 }
 
 const finalInstruction = `
