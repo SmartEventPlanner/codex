@@ -1,9 +1,7 @@
 // summarize-diff.js
 // Usage: node .github/scripts/summarize-diff.js pr-diff.txt > pr-summary.md
 import fs from "node:fs";
-import genai from "@google/genai";
-const { GoogleGenerativeAI } = genai;
-
+import { GoogleGenAI } from "@google/genai";             // ← これが正しい
 
 const file = process.argv[2] || "pr-diff.txt";
 const API_KEY = process.env.GEMINI_API_KEY;
@@ -19,15 +17,14 @@ const MAX_CHARS = 100_000;
 const chunks = [];
 for (let i = 0; i < raw.length; i += MAX_CHARS) chunks.push(raw.slice(i, i + MAX_CHARS));
 
-const client = new GoogleGenerativeAI({ apiKey: API_KEY });
-const fast = client.getGenerativeModel({ model: "gemini-2.5-flash" });
-const precise = client.getGenerativeModel({ model: "gemini-2.5-pro" });
+const ai = new GoogleGenAI({ apiKey: API_KEY });         // :contentReference[oaicite:2]{index=2}
 
-async function summarize(model, text, instruction) {
-  const res = await model.generateContent([
-    { text: `${instruction}\n\n---BEGIN DIFF---\n${text}\n---END DIFF---` }
-  ]);
-  return (res.response.text() || "").trim();
+async function summarize(modelName, text, instruction) {
+  const r = await ai.models.generateContent({
+    model: modelName,
+    contents: `${instruction}\n\n---BEGIN DIFF---\n${text}\n---END DIFF---`
+  });
+  return (r.text || "").trim();
 }
 
 const perChunkInstruction = `
@@ -41,7 +38,7 @@ const perChunkInstruction = `
 
 const partials = [];
 for (const c of chunks) {
-  partials.push(await summarize(fast, c, perChunkInstruction));
+  partials.push(await summarize("gemini-2.5-flash", c, perChunkInstruction)); // 速い
 }
 
 const finalInstruction = `
@@ -51,5 +48,5 @@ const finalInstruction = `
 - 箇条書き中心で簡潔に
 `;
 
-const finalText = await summarize(precise, partials.join("\n\n---\n\n"), finalInstruction);
+const finalText = await summarize("gemini-2.5-pro", partials.join("\n\n---\n\n"), finalInstruction); // 精度
 process.stdout.write(`# 変更点サマリ\n\n${finalText}\n`);
