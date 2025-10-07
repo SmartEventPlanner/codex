@@ -11,18 +11,16 @@ on:
 jobs:
   from-issue:
     runs-on: ubuntu-latest
-    # ラベル 'codex' が付いたときのみ
     if: github.event.label.name == 'codex'
 
-    # gh CLI が参照するトークンを PAT に切替
-    # gh は各ステップで GH_TOKEN を見る仕様。ここでジョブ全体に配布します。
+    # gh CLI 用トークン（C案: PAT を Secrets に入れている想定）
     env:
       GH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
     permissions:
       contents: write
       pull-requests: write
-      issues: write   # issue にコメントするため
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +37,9 @@ jobs:
       - name: Install deps for scripts
         run: npm install --no-audit --no-fund @google/genai@^0.9.0
 
+      # ① 生成＆適用：ここで「変更があったか」を step output に出す
       - name: Generate patch via Gemini
+        id: patch
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -47,15 +47,15 @@ jobs:
           ISSUE_NUM:   ${{ github.event.issue.number }}
         run: |
           set -e
-          BRANCH="gemini/issue-${ISSUE_NUM}"
-          git switch -c "$BRANCH"
 
-          node .github/scripts/make-patch.js "$ISSUE_TITLE" "$ISSUE_BODY" > ai.patch
+          # まずパッチだけ作る
+          node .github/scripts/make-patch.js "$ISSUE_TITLE" "$ISSUE_BODY" > ai.patch || true
 
           if [ ! -s ai.patch ]; then
             echo "No patch generated (empty ai.patch)."
-            # 429等で生成できなかった旨を Issue に通知（GH_TOKEN は PAT を使用）
             gh issue comment "$ISSUE_NUM" -b "Gemini API のレート/クオータに達した可能性があります。時間を置いて再度ラベル付与してください。" || true
+            # 出力: 変更なし
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -63,19 +63,29 @@ jobs:
           head -n 200 ai.patch || true
           echo "---------------------------------"
 
+          # 変更がありそうなので、ここで初めてブランチを作る
+          BRANCH="gemini/issue-${ISSUE_NUM}"
+          git switch -c "$BRANCH"
+
+          # パッチ適用
           git apply -p0 --index ai.patch
 
+          # 変更がステージングされているか確認
           if [[ -n "$(git status --porcelain)" ]]; then
             git add -A
             git commit -m "Fix: #${ISSUE_NUM} – ${ISSUE_TITLE}"
             git push -u origin "$BRANCH"
+            # 出力: 変更あり
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changes after apply."
-            exit 0
+            # 出力: 変更なし
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # ② PR 作成：変更がある時だけ実行（step output で分岐）
       - name: Create Pull Request
-        if: ${{ success() }}
+        if: ${{ steps.patch.outputs.has_changes == 'true' }}
         env:
           ISSUE_NUM:   ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
