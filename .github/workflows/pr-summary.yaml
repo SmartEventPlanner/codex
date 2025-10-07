@@ -11,6 +11,11 @@ on:
 jobs:
   summarize:
     runs-on: ubuntu-latest
+
+    # gh 用トークンを全ステップに配布
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     permissions:
       contents: read
       pull-requests: write
@@ -32,7 +37,6 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PR_NUMBER: ${{ github.event.number }}
           PR_URL:    ${{ github.event.pull_request.html_url }}
-          GH_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           gh pr diff ${PR_NUMBER} > pr-diff.txt
