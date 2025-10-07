@@ -2,7 +2,8 @@
 // Usage: node .github/scripts/make-patch.js "<issue_title>" "<issue_body>" > ai.patch
 import fs from "node:fs";
 import path from "node:path";
-import { GoogleGenerativeAI } from "@google/genai";
+import genai from "@google/genai";
+const { GoogleGenerativeAI } = genai;
 
 const [ISSUE_TITLE = "", ISSUE_BODY = ""] = process.argv.slice(2);
 const API_KEY = process.env.GEMINI_API_KEY;
