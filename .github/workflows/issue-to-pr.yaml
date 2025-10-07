@@ -11,6 +11,7 @@ on:
 jobs:
   from-issue:
     runs-on: ubuntu-latest
+    # ラベル 'codex' が付いたIssueのみ
     if: github.event.label.name == 'codex'
 
     permissions:
@@ -47,7 +48,8 @@ jobs:
 
           if [ ! -s ai.patch ]; then
             echo "No patch generated (empty ai.patch)."
-            # 任意の通知（コメント）を入れたい場合はここで gh issue comment を呼ぶ
+            # 任意：上限に達した可能性などをIssueへ通知
+            gh issue comment "$ISSUE_NUM" -b "Gemini API のレート/クオータに達した可能性があります。時間を置いて再度ラベル付与してください。"
             exit 0
           fi
 
