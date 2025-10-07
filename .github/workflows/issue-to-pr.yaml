@@ -11,8 +11,12 @@ on:
 jobs:
   from-issue:
     runs-on: ubuntu-latest
-    # ラベル 'codex' が付いたIssueのみ
+    # ラベル 'codex' が付いたときのみ
     if: github.event.label.name == 'codex'
+
+    # gh CLI 用のトークンを全ステップへ配布
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     permissions:
       contents: write
@@ -48,8 +52,8 @@ jobs:
 
           if [ ! -s ai.patch ]; then
             echo "No patch generated (empty ai.patch)."
-            # 任意：上限に達した可能性などをIssueへ通知
-            gh issue comment "$ISSUE_NUM" -b "Gemini API のレート/クオータに達した可能性があります。時間を置いて再度ラベル付与してください。"
+            # 429等で生成できなかった旨をIssueへ通知（GH_TOKENはジョブenvで供給）
+            gh issue comment "$ISSUE_NUM" -b "Gemini API のレート/クオータに達した可能性があります。時間を置いて再度ラベル付与してください。" || true
             exit 0
           fi
 
@@ -71,7 +75,6 @@ jobs:
       - name: Create Pull Request
         if: ${{ success() }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUM: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
