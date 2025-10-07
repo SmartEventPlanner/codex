@@ -12,7 +12,7 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-// 軽い文脈（大きすぎるとトークン超過になるため一部だけ）
+// リポの軽量コンテキスト（入れすぎると高コストなので一部のみ）
 function safeRead(p, limit = 8000) {
   try { return fs.readFileSync(p, "utf8").slice(0, limit); } catch { return ""; }
 }
@@ -24,7 +24,7 @@ const ctx = [];
 });
 const repoContext = ctx.join("\n\n").slice(0, 16000);
 
-// 制約
+// 制約（触ってほしくないものを明示）
 const constraints = `
 - 出力は **統一diff (unified patch)** のみ。説明文やコードブロック記号は不要。
 - .git / 隠しファイル / dist, build, out / *.lock は変更禁止。
@@ -52,9 +52,9 @@ ${constraints}
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-// 429/503 対策：バックオフ＋モデルフォールバック
+// 429/503 対策：バックオフ＋モデルフォールバック（Flash → Pro の順）
 async function generateWithRetry(contents) {
-  const models = ["gemini-2.5-pro", "gemini-2.5-flash"];
+  const models = ["gemini-2.5-flash", "gemini-2.5-pro"]; // 先に軽いモデルで当たりに行く
   const backoff = [2000, 5000, 10000, 20000];
 
   for (const model of models) {
@@ -65,7 +65,10 @@ async function generateWithRetry(contents) {
       } catch (e) {
         const msg = String(e?.message || e);
         const retryable = /429|RESOURCE_EXHAUSTED|rate|temporar|timeout|503/i.test(msg);
-        if (!retryable || i === backoff.length) throw e;
+        if (!retryable || i === backoff.length) {
+          // これ以上無理 → 空文字で返して「空パッチ扱い」にする（ジョブ失敗させない）
+          return "";
+        }
         await sleep(backoff[i]);
       }
     }
@@ -76,7 +79,7 @@ async function generateWithRetry(contents) {
 const raw = await generateWithRetry(prompt);
 let text = raw;
 
-// フェンス除去
+// フェンス付き（```diff ...```）なら中身だけ抽出
 const fenced = text.match(/```(?:diff|patch)?\s*([\s\S]*?)```/i);
 if (fenced) text = fenced[1].trim();
 
@@ -86,7 +89,7 @@ const looksLikeDiff =
 
 if (!looksLikeDiff || text.length < 10) {
   console.error("Model did not return a valid unified diff (possibly quota).");
-  process.exit(0); // 空パッチとして終了（ジョブ失敗にしない）
+  process.exit(0); // 空パッチ扱いで静かに終了
 }
 
 process.stdout.write(text.endsWith("\n") ? text : text + "\n");
