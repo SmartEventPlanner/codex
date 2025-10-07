@@ -14,15 +14,15 @@ jobs:
     # ラベル 'codex' が付いたときのみ
     if: github.event.label.name == 'codex'
 
-    # gh CLI 用のトークンを全ステップへ配布
+    # gh CLI が参照するトークンを PAT に切替
+    # gh は各ステップで GH_TOKEN を見る仕様。ここでジョブ全体に配布します。
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
     permissions:
       contents: write
       pull-requests: write
-      issues: write        # ← これを追加（issue にコメントするため）
-
+      issues: write   # issue にコメントするため
 
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
 
           if [ ! -s ai.patch ]; then
             echo "No patch generated (empty ai.patch)."
-            # 429等で生成できなかった旨をIssueへ通知（GH_TOKENはジョブenvで供給）
+            # 429等で生成できなかった旨を Issue に通知（GH_TOKEN は PAT を使用）
             gh issue comment "$ISSUE_NUM" -b "Gemini API のレート/クオータに達した可能性があります。時間を置いて再度ラベル付与してください。" || true
             exit 0
           fi
@@ -77,7 +77,7 @@ jobs:
       - name: Create Pull Request
         if: ${{ success() }}
         env:
-          ISSUE_NUM: ${{ github.event.issue.number }}
+          ISSUE_NUM:   ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           gh pr create \
