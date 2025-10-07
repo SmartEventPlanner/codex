@@ -21,6 +21,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write        # ← これを追加（issue にコメントするため）
+
 
     steps:
       - uses: actions/checkout@v4
