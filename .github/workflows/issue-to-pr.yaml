@@ -1,5 +1,9 @@
 name: Issue to PR (Gemini)
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   issues:
     types: [labeled]
@@ -7,7 +11,6 @@ on:
 jobs:
   from-issue:
     runs-on: ubuntu-latest
-    # ラベル 'codex' が付いたIssueだけ処理
     if: github.event.label.name == 'codex'
 
     permissions:
@@ -27,8 +30,7 @@ jobs:
           node-version: "lts/*"
 
       - name: Install deps for scripts
-        run: |
-          npm install --no-audit --no-fund @google/genai@^0.9.0
+        run: npm install --no-audit --no-fund @google/genai@^0.9.0
 
       - name: Generate patch via Gemini
         env:
@@ -45,6 +47,7 @@ jobs:
 
           if [ ! -s ai.patch ]; then
             echo "No patch generated (empty ai.patch)."
+            # 任意の通知（コメント）を入れたい場合はここで gh issue comment を呼ぶ
             exit 0
           fi
 
