@@ -1,12 +1,9 @@
 {
-  "name": "codex",
+  "name": "gh-gemini-automation",
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "GitHub Actions",
-  "scripts": {
-    "prepare": "echo \"ok\""
-  },
+  "description": "GitHub Actions + Gemini API automation",
   "devDependencies": {
     "@google/genai": "^0.9.0"
   }
