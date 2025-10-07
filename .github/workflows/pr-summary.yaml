@@ -1,5 +1,9 @@
 name: PR Summary (Gemini)
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     types: [opened, synchronize]
@@ -21,8 +25,7 @@ jobs:
           node-version: "lts/*"
 
       - name: Install deps for scripts
-        run: |
-          npm install --no-audit --no-fund @google/genai@^0.9.0
+        run: npm install --no-audit --no-fund @google/genai@^0.9.0
 
       - name: Build diff & summarize
         env:
