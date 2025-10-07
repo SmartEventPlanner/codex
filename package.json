@@ -2,8 +2,8 @@
   "name": "gh-gemini-automation",
   "private": true,
   "type": "module",
-  "version": "0.1.0",
-  "description": "GitHub Actions + Gemini API automation",
+  "version": "0.2.0",
+  "description": "GitHub Actions + Gemini API automation (retry/backoff)",
   "devDependencies": {
     "@google/genai": "^0.9.0"
   }
