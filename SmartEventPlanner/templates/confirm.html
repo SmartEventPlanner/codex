@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ワンタイムコード認証</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin:0; }
+        .container { background: #fff; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { text-align: center; color: #333; margin-top: 0; }
+        p { text-align: center; color: #555; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; background-color: #007bff; color: white; width: 100%; display: block; text-align: center; }
+        .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid transparent; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .alert-info { background-color: #cce5ff; color: #004085; border-color: #b8daff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>コード認証</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% else %}
+                 <p>登録したメールアドレスに送信された<br>6桁のコードを入力してください。</p>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="post">
+             <div class="form-group">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" value="{{ email or '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="otp">ワンタイムコード</label>
+                <input type="text" id="otp" name="otp" required maxlength="6" pattern="\d{6}" title="6桁の数字を入力してください">
+            </div>
+            <button type="submit" class="btn">認証</button>
+        </form>
+    </div>
+</body>
+</html>

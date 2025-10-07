@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>招待リスト</title>
+<style>
+  body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:#f4f4f9;display:flex;
+       justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;margin:0}
+  .container{background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.1);
+             width:100%;max-width:820px}
+  h1{font-size:1.4rem;margin-bottom:1.2rem;text-align:center;color:#333}
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ddd;padding:10px 12px;text-align:left}
+  th{background:#f2f2f2}
+  tr:hover{background:#fafafa}
+  .link-btn,.finalize-btn{color:#007bff;text-decoration:none;margin-right:8px}
+  .finalize-btn{color:#e83e8c;font-weight:600}
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>招待リスト</h1>
+    {% if events %}
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>作成日</th>
+          <th>参加 / 未回答 / 総数</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td>{{ ev.title }}</td>
+          <td>{{ ev.created_on }}</td>
+          <td>{{ ev.attending }} / {{ ev.pending }} / {{ ev.total }}</td>
+          <td>
+            <a class="link-btn" href="{{ url_for('event_results', event_id=ev.id) }}">詳細</a>
+            <a class="finalize-btn" href="{{ url_for('finalize_event', event_id=ev.id) }}">予定決定</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p>まだ招待を作成していません。</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予定の作成</title>
+    <style>
+        /* 基本的なスタイリング */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* フォーム全体のコンテナ */
+        .schedule-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        /* 各フォームのグループ */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* 入力フィールド（input, select, textarea）の共通スタイル */
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* paddingを含めてwidth:100%にする */
+            font-size: 16px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        
+        /* 時間入力欄を横並びに */
+        .time-inputs {
+            display: flex;
+            gap: 20px; /* 入力欄の間のスペース */
+            align-items: center;
+        }
+        
+        .time-inputs .form-group {
+            flex: 1; /* 幅を均等に */
+            margin-bottom: 0;
+        }
+        
+        .time-separator {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* 終日チェックボックス */
+        .allday-checkbox {
+            display: flex;
+            align-items: center;
+        }
+
+        .allday-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            width: auto;
+        }
+        .allday-checkbox label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        
+        /* ボタンのスタイル */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        button[type="button"] {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+        button[type="button"]:hover {
+            background-color: #e0e0e0;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="schedule-container">
+        <h1>予定の作成</h1>
+        <form action="#" method="post">
+
+            <div class="form-group">
+                <label for="event-title">タイトル</label>
+                <input type="text" id="event-title" name="event-title" placeholder="例：チームミーティング" required>
+            </div>
+
+            <div class="form-group">
+                <label for="event-date">日付</label>
+                <input type="date" id="event-date" name="event-date" required>
+            </div>
+
+            <div class="form-group allday-checkbox">
+                <input type="checkbox" id="all-day" name="all-day">
+                <label for="all-day">終日</label>
+            </div>
+
+            <div id="time-input-container">
+                <div class="time-inputs">
+                    <div class="form-group">
+                        <label for="start-time">開始時刻</label>
+                        <input type="time" id="start-time" name="start-time">
+                    </div>
+                    <span class="time-separator">～</span>
+                    <div class="form-group">
+                        <label for="end-time">終了時刻</label>
+                        <input type="time" id="end-time" name="end-time">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="event-location">場所</label>
+                <input type="text" id="event-location" name="event-location" placeholder="例：第3会議室、オンライン">
+            </div>
+
+            <div class="form-group">
+                <label for="notification-time">通知</label>
+                <select id="notification-time" name="notification-time">
+                    <option value="none">通知なし</option>
+                    <option value="15m">15分前</option>
+                    <option value="30m">30分前</option>
+                    <option value="1h">1時間前</option>
+                    <option value="1d" selected>1日前</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="event-description">詳細・メモ</label>
+                <textarea id="event-description" name="event-description" rows="5" placeholder="会議のアジェンダや持ち物などを記入"></textarea>
+            </div>
+            
+
+
+            <div class="form-actions">
+                <button type="button" onclick="window.history.back();">キャンセル</button>
+                <button type="submit">保存</button>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        // DOMが読み込まれたら実行
+        document.addEventListener('DOMContentLoaded', function() {
+            const allDayCheckbox = document.getElementById('all-day');
+            const timeInputContainer = document.getElementById('time-input-container');
+
+            // チェックボックスの状態が変わったときの処理
+            allDayCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // チェックされたら時間入力を非表示
+                    timeInputContainer.style.display = 'none';
+                } else {
+                    // チェックが外れたら時間入力を表示
+                    timeInputContainer.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

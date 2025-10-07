@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予定の招待作成</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #444;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="datetime-local"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .date-range {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .date-range .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .invite-section {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .invite-section .email-container {
+            flex-grow: 1;
+        }
+        .invite-section .deadline-container {
+            width: 40%;
+        }
+        .email-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .email-input-group input {
+            flex-grow: 1;
+        }
+        .add-email-btn, .remove-email-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .add-email-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .remove-email-btn {
+            background-color: #dc3545;
+            color: white;
+            flex-shrink: 0;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ↓↓↓ ここだけ追加／変更 ↓↓↓ -->
+<form id="invitation-form" action="{{ url_for('invite') }}" method="POST">
+  <h1>予定の招待</h1>
+
+  <!-- ① タイトル -->
+  <label for="event-title">予定のタイトル</label>
+  <input type="text" id="event-title" name="event-title" required>
+
+  <!-- ② 開催日の範囲 -->
+  <label>開催日程</label>
+  <div class="date-range">
+      <input type="date" id="start-date" name="start-date" required>
+      〜
+      <input type="date" id="end-date"   name="end-date"   required>
+  </div>
+
+  <!-- ③ 1 日あたりの時間帯 -->
+  <label>時間帯</label>
+  <div class="time-range">
+      <input type="time" id="start-time" name="start-time" value="20:00" required>
+      〜
+      <input type="time" id="end-time"   name="end-time"   value="22:00" required>
+  </div>
+
+        <div class="invite-section">
+            <div class="email-container">
+                <label for="email-list">招待メール</label>
+                <div id="email-list">
+                    <div class="email-input-group">
+                        <input type="email" name="emails[]" placeholder="guest@example.com" required>
+                        <button type="button" class="add-email-btn" onclick="addEmailInput()">＋</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deadline-container">
+                <div class="form-group">
+                    <label for="deadline">入力期限</label>
+                    <input type="datetime-local" id="deadline" name="deadline" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary">下書きに保存</button>
+            <button type="submit" class="btn btn-primary">送信</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addEmailInput() {
+        const emailList = document.getElementById('email-list');
+        const newEmailGroup = document.createElement('div');
+        newEmailGroup.className = 'email-input-group';
+        newEmailGroup.innerHTML = `
+            <input type="email" name="emails[]" placeholder="guest@example.com" required>
+            <button type="button" class="remove-email-btn" onclick="removeEmailInput(this)">ー</button>
+        `;
+        emailList.appendChild(newEmailGroup);
+    }
+
+    function removeEmailInput(button) {
+        const emailGroup = button.parentElement;
+        emailGroup.remove();
+    }
+</script>
+
+</body>
+</html>

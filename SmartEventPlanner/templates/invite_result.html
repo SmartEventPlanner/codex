@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招待の最適化結果</title>
+    <style>
+        body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f9;color:#333;line-height:1.6;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;margin:0}
+        .container{background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.1);width:100%;max-width:900px}
+        h1{color:#444;text-align:center;margin:0 0 10px}
+        h2{color:#555;text-align:center;margin:0 0 25px;font-weight:400;font-size:1.2rem}
+        .result-box{background:#e3f2fd;border-left:5px solid #007bff;padding:20px;margin:20px 0;border-radius:5px}
+        .result-box p{margin:0;font-size:1.1rem}
+        .result-box .best-schedule{font-size:1.5rem;font-weight:700;color:#0056b3}
+        /* 集計表 */
+        .details-table{width:100%;border-collapse:collapse;margin-top:25px}
+        .details-table th,.details-table td{border:1px solid #ddd;padding:12px;text-align:left}
+        .details-table th{background:#f2f2f2}
+
+        /* ヒートマップ */
+        .heatmap-wrapper{overflow-x:auto;margin-top:40px}
+        .heatmap-table{border-collapse:collapse;width:max-content}
+        .heatmap-table th,.heatmap-table td{border:1px solid #ddd;padding:6px 10px;text-align:center;font-size:.85rem;white-space:nowrap}
+        .heatmap-table th{background:#f2f2f2;position:sticky;top:0;z-index:2}
+        .heatmap-cell{min-width:60px;color:#fff;font-weight:600}
+        .heatmap-cell[data-count="0"]{background:#e9ecef;color:#777}
+        .legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.85rem}
+        .legend-bar{height:10px;width:100px;background:linear-gradient(to right,#e9ecef,#007bff);border:1px solid #ccc}
+
+        .back-link{display:inline-block;margin-top:25px;padding:10px 20px;background:#6c757d;color:#fff;text-decoration:none;border-radius:4px}
+        .back-link:hover{background:#5a6268}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>スマートイベントプランナー</h1>
+        <h2>最適化結果</h2>
+
+        {% if result.error %}
+            <p>{{ result.error }}</p>
+        {% elif result.message %}
+            <p>{{ result.message }}</p>
+        {% else %}
+            <div class="result-box">
+                <p><strong>{{ result.event_title }}</strong> の最適な日時は...</p>
+                <p class="best-schedule">{{ result.best_schedule }}</p>
+                <p>参加率: <strong>{{ result.participation_rate }}</strong> ({{ result.attendees }} / {{ result.total_invitees }}人)</p>
+            </div>
+
+            <!-- 従来の詳細テーブル -->
+            <h3>全候補日時の集計</h3>
+            <table class="details-table">
+                <thead>
+                    <tr><th>候補日時</th><th>参加可能人数</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in result.details %}
+                    <tr><td>{{ item.time }}</td><td>{{ item.count }} 人</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 新しい可視化: 日付×時間のヒートマップ -->
+            <h3 style="margin-top:40px">可用人数ヒートマップ</h3>
+            <div class="heatmap-wrapper">
+                <table id="heatmap" class="heatmap-table"></table>
+            </div>
+            <div class="legend"><span>0</span><div class="legend-bar"></div><span>最大</span></div>
+        {% endif %}
+        <a href="/invite" class="back-link">別の招待を作成する</a>
+    </div>
+
+    <script>
+        // --- ヒートマップ生成 ---
+        (function(){
+            const raw = {{ result.details|tojson }}; // [{time:"YYYY年MM月DD日 HH:MM", count: n}, ...]
+            if(!raw || !raw.length){return;}
+
+            // グループ化
+            const data = {};
+            let max = 0;
+            raw.forEach(({time,count})=>{
+                const [date,hm] = time.split(' ');
+                if(!data[date]) data[date] = {};
+                data[date][hm] = count;
+                if(count>max) max=count;
+            });
+            const dates = Object.keys(data);
+            // ユニークな時刻を昇順で並べ替え
+            const timesSet = new Set();
+            raw.forEach(({time})=>{const t=time.split(' ')[1]; timesSet.add(t);});
+            const times = Array.from(timesSet).sort();
+
+            // テーブル構築
+            const table = document.getElementById('heatmap');
+            // ヘッダ
+            const thead = document.createElement('thead');
+            const trHead = document.createElement('tr');
+            trHead.appendChild(document.createElement('th')); // 左上空白
+            times.forEach(t=>{
+                const th=document.createElement('th'); th.textContent=t; trHead.appendChild(th);
+            });
+            thead.appendChild(trHead); table.appendChild(thead);
+
+            const tbody=document.createElement('tbody');
+            dates.forEach(date=>{
+                const tr=document.createElement('tr');
+                const th=document.createElement('th'); th.textContent=date; tr.appendChild(th);
+                times.forEach(t=>{
+                    const td=document.createElement('td');
+                    const n=data[date][t]||0;
+                    td.textContent=n; td.className='heatmap-cell';
+                    td.dataset.count=n;
+                    // 色計算 (最大が0の場合は白)
+                    const ratio=max? n/max : 0;
+                    const blue=255; // #007bff → rgb(0,123,255)
+                    const red=0, green=Math.round(123*ratio), blueCh=Math.round(255*ratio);
+                    td.style.background=`rgb(${red},${green},${blueCh})`;
+                    if(n===0){td.style.color="#777";}
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        })();
+    </script>
+</body>
+</html>

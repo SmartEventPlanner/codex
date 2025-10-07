@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予定を確定</title>
+<style>
+  body{font-family:"Segoe UI",Tahoma,Helvetica,sans-serif;background:#f4f4f9;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;margin:0;padding:20px}
+  .card{background:#fff;padding:32px 40px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.1);width:100%;max-width:660px}
+  h1{text-align:center;font-size:1.5rem;color:#333;margin-bottom:24px}
+  form{display:flex;flex-direction:column;gap:22px}
+  label{font-weight:600;margin-bottom:6px}
+  input[type="text"],textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-size:1rem}
+  textarea{resize:vertical;height:110px}
+  .slot-box{max-height:300px;overflow-y:auto;border:1px solid #ccc;border-radius:4px;padding:14px}
+  .slot-item{display:flex;align-items:center;margin-bottom:10px;font-size:.95rem}
+  .slot-item input{margin-right:10px}
+  .btn-primary{background:#007bff;color:#fff;border:none;padding:12px 0;border-radius:4px;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s}
+  .btn-primary:hover{background:#0056b3}
+  .msg{text-align:center;color:#555}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>「{{ event.title }}」予定確定</h1>
+    {% if not choices %}
+      <p class="msg">まだ参加者から候補日時が集まっていません。</p>
+    {% else %}
+    <form method="post">
+      <!-- タイトル -->
+      <div>
+        <label for="final_title">確定タイトル</label>
+        <input type="text" id="final_title" name="final_title" value="{{ event.title }}" required>
+      </div>
+
+      <!-- 候補日時 -->
+      <div>
+        <label>確定する日時を選択</label>
+        <div class="slot-box">
+          {% for opt in choices %}
+          <div class="slot-item">
+            <input type="radio" id="slot-{{ loop.index }}" name="final_datetime" value="{{ opt.iso }}" required>
+            <label for="slot-{{ loop.index }}">{{ opt.display }}（{{ opt.count }}人 参加可）</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- カスタム本文 -->
+      <div>
+        <label for="custom_message">メール本文 (任意)</label>
+        <textarea id="custom_message" name="custom_message" placeholder="参加者への連絡事項を入力してください"></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">この内容で確定 &amp; メール送信</button>
+    </form>
+    {% endif %}
+  </div>
+</body>
+</html>
