@@ -1,7 +1,9 @@
 // summarize-diff.js
 // Usage: node .github/scripts/summarize-diff.js pr-diff.txt > pr-summary.md
 import fs from "node:fs";
-import { GoogleGenerativeAI } from "@google/genai";
+import genai from "@google/genai";
+const { GoogleGenerativeAI } = genai;
+
 
 const file = process.argv[2] || "pr-diff.txt";
 const API_KEY = process.env.GEMINI_API_KEY;
