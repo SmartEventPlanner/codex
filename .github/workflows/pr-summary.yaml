@@ -19,17 +19,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-          cache: "npm"
 
-      - name: Install JS deps
-        run: npm ci
+      - name: Install deps for scripts
+        run: |
+          npm install --no-audit --no-fund @google/genai@^0.9.0
 
       - name: Build diff & summarize
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PR_NUMBER: ${{ github.event.number }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_URL:    ${{ github.event.pull_request.html_url }}
+          GH_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           gh pr diff ${PR_NUMBER} > pr-diff.txt
           node .github/scripts/summarize-diff.js pr-diff.txt > pr-summary.md
           gh pr comment "${PR_URL}" --body-file pr-summary.md
